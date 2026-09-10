@@ -47,9 +47,11 @@
 
   .shell{display:grid; grid-template-columns:250px 1fr; min-height:100vh;}
   .sidebar{background:var(--surface-2); border-right:1px solid var(--line); padding:22px 14px; display:flex; flex-direction:column; gap:16px;}
-  .brand{padding:4px 10px 6px;}
+  .brand{padding:4px 10px 6px; display:flex; align-items:flex-start; justify-content:space-between; gap:8px;}
   .brand .name{font-family:var(--font-display); font-size:1.14rem; font-weight:600; letter-spacing:-.01em;}
   .brand .sub{display:block; font-family:var(--font-body); font-weight:600; font-size:.64rem; color:var(--accent); letter-spacing:.09em; text-transform:uppercase; margin-top:3px;}
+  .theme-toggle{flex:none; width:28px; height:28px; border-radius:50%; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer; font-size:.85rem; display:flex; align-items:center; justify-content:center; line-height:1;}
+  .theme-toggle:hover{border-color:var(--accent); color:var(--accent);}
   nav{display:flex; flex-direction:column; gap:3px;}
   .navitem{display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:var(--radius-s); font-size:.85rem; color:var(--ink-muted); cursor:pointer; border:1px solid transparent; background:none; text-align:left; width:100%; font-family:var(--font-body); transition:background .12s;}
   .navitem .idx{font-family:var(--font-mono); font-size:.66rem; color:var(--ink-muted); opacity:.75; min-width:1.4em;}
@@ -197,8 +199,11 @@
 <div class="shell">
   <aside class="sidebar">
     <div class="brand">
-      <span class="name">Honorários Contábeis</span>
-      <span class="sub">Precificação técnica de clientes</span>
+      <div>
+        <span class="name">Honorários Contábeis</span>
+        <span class="sub">Precificação técnica de clientes</span>
+      </div>
+      <button type="button" class="theme-toggle" id="themeToggle" onclick="App.toggleTheme()" title="Alternar modo claro/escuro" aria-label="Alternar modo claro/escuro">◐</button>
     </div>
     <nav id="nav"></nav>
     <div class="sidebar-foot" id="statusBox"></div>
@@ -492,6 +497,31 @@
   }
   function margemRealPct(c, s){ var b=breakdown(c,s); return b.total>0 ? b.margem/b.total : 0; }
   function temSazonalidade(c){ return c.regime==="real" || ((c.regime==="presumido") && c.regimeDetalhe==="industria"); }
+
+  // ===================================================================
+  // Tema (claro/escuro)
+  // ===================================================================
+  var THEME_KEY = "honorarios_contabeis_theme_v1";
+  function applyTheme(theme){
+    var root = document.documentElement;
+    if(theme==="light" || theme==="dark") root.setAttribute("data-theme", theme);
+    else root.removeAttribute("data-theme");
+    var btn = document.getElementById("themeToggle");
+    if(btn) btn.textContent = theme==="light" ? "☀" : (theme==="dark" ? "☾" : "◐");
+  }
+  function initTheme(){
+    var saved = null;
+    try{ saved = localStorage.getItem(THEME_KEY); }catch(e){}
+    applyTheme(saved);
+  }
+  function toggleTheme(){
+    var current = document.documentElement.getAttribute("data-theme");
+    var prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var effectiveCurrent = current || (prefersDark ? "dark" : "light");
+    var next = effectiveCurrent==="dark" ? "light" : "dark";
+    applyTheme(next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+  }
 
   // ===================================================================
   // Persistence (armazenamento local do navegador — localStorage)
@@ -1146,9 +1176,11 @@
     addCliente:addCliente, removeCliente:removeCliente, selectCliente:selectCliente,
     setSimCliente:setSimCliente, copyProposal:copyProposal,
     updateAvulso:updateAvulso, addAvulso:addAvulso, removeAvulso:removeAvulso,
-    exportBackup:exportBackup, importBackup:importBackup
+    exportBackup:exportBackup, importBackup:importBackup,
+    toggleTheme:toggleTheme
   };
 
+  initTheme();
   renderApp();
   initPersistence();
 })();
