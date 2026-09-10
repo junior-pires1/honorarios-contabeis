@@ -1,0 +1,1157 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Honorários Contábeis</title>
+<meta name="description" content="Sistema de precificação técnica de honorários contábeis — custo-hora por função, fator de risco tributário, piso de honorários e proposta comercial pronta.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#EEF2EF; --surface:#FFFFFF; --surface-2:#F6F8F6;
+    --ink:#16231F; --ink-muted:#5C6E67; --line:#DBE2DD;
+    --accent:#0F6B5C; --accent-ink:#FFFFFF; --accent-soft:#DCEDE7;
+    --brass:#966423; --brass-soft:#F1E4CE;
+    --danger:#A5271F; --danger-soft:#F6DBD8;
+    --success:#146B44; --success-soft:#DBEEE1;
+    --shadow:0 1px 2px rgba(22,35,31,.06), 0 6px 18px rgba(22,35,31,.07);
+    --radius-s:6px; --radius-m:10px; --radius-l:16px;
+    --font-display:'Fraunces', Georgia, serif;
+    --font-body:'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono:'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0F1B18; --surface:#16241F; --surface-2:#122019;
+      --ink:#E8EFEA; --ink-muted:#93A79F; --line:#28392F;
+      --accent:#57D9BA; --accent-ink:#062821; --accent-soft:#173A31;
+      --brass:#E3AC66; --brass-soft:#3A2C17;
+      --danger:#FF7A70; --danger-soft:#3B1D1A;
+      --success:#7BE2A8; --success-soft:#153A26;
+      --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.4);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F1B18; --surface:#16241F; --surface-2:#122019;
+    --ink:#E8EFEA; --ink-muted:#93A79F; --line:#28392F;
+    --accent:#57D9BA; --accent-ink:#062821; --accent-soft:#173A31;
+    --brass:#E3AC66; --brass-soft:#3A2C17;
+    --danger:#FF7A70; --danger-soft:#3B1D1A;
+    --success:#7BE2A8; --success-soft:#153A26;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 26px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box;}
+  body{background:var(--bg); color:var(--ink); font-family:var(--font-body); margin:0;}
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; margin:0; text-wrap:balance;}
+  .num{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  .shell{display:grid; grid-template-columns:250px 1fr; min-height:100vh;}
+  .sidebar{background:var(--surface-2); border-right:1px solid var(--line); padding:22px 14px; display:flex; flex-direction:column; gap:16px;}
+  .brand{padding:4px 10px 6px;}
+  .brand .name{font-family:var(--font-display); font-size:1.14rem; font-weight:600; letter-spacing:-.01em;}
+  .brand .sub{display:block; font-family:var(--font-body); font-weight:600; font-size:.64rem; color:var(--accent); letter-spacing:.09em; text-transform:uppercase; margin-top:3px;}
+  nav{display:flex; flex-direction:column; gap:3px;}
+  .navitem{display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:var(--radius-s); font-size:.85rem; color:var(--ink-muted); cursor:pointer; border:1px solid transparent; background:none; text-align:left; width:100%; font-family:var(--font-body); transition:background .12s;}
+  .navitem .idx{font-family:var(--font-mono); font-size:.66rem; color:var(--ink-muted); opacity:.75; min-width:1.4em;}
+  .navitem:hover{background:var(--surface); color:var(--ink);}
+  .navitem.active{background:var(--accent-soft); color:var(--accent); font-weight:600; border-color:var(--accent);}
+  .navitem.active .idx{color:var(--accent);}
+  .sidebar-foot{margin-top:auto; padding:10px; font-size:.7rem; color:var(--ink-muted); border-top:1px solid var(--line); padding-top:14px;}
+  .status-row{display:flex; align-items:center; gap:7px; margin-bottom:6px;}
+  .dot{width:7px; height:7px; border-radius:50%; background:var(--ink-muted); flex:none;}
+  .dot.saved{background:var(--success);}
+  .dot.pending,.dot.saving{background:var(--brass);}
+  .dot.error{background:var(--danger);}
+
+  .main{padding:28px 34px 70px; overflow-y:auto; max-height:100vh;}
+  .pagehead{display:flex; align-items:baseline; justify-content:space-between; gap:20px; margin-bottom:20px; flex-wrap:wrap;}
+  .pagehead h1{font-size:1.42rem;}
+  .pagehead p{margin:4px 0 0; color:var(--ink-muted); font-size:.86rem; max-width:62ch;}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:22px;}
+  .kpi{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-m); padding:14px 16px; box-shadow:var(--shadow);}
+  .kpi .label{font-size:.65rem; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted);}
+  .kpi .value{font-family:var(--font-mono); font-size:1.32rem; font-weight:600; margin-top:6px; font-variant-numeric:tabular-nums; color:var(--accent);}
+  .kpi .note{font-size:.7rem; color:var(--ink-muted); margin-top:3px;}
+
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-m); box-shadow:var(--shadow); padding:18px 20px; margin-bottom:18px;}
+  .panel h2{font-size:1.02rem; margin-bottom:2px;}
+  .panel .hint{font-size:.76rem; color:var(--ink-muted); margin:2px 0 12px;}
+  .panel-head{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px;}
+
+  table.data{width:100%; border-collapse:collapse; font-size:.82rem;}
+  .table-wrap{overflow-x:auto;}
+  table.data th{text-align:left; font-size:.64rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-muted); padding:7px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  table.data td{padding:6px 8px; border-bottom:1px solid var(--line); vertical-align:middle;}
+  table.data tbody tr:hover{background:var(--surface-2);}
+  table.data td.num,table.data th.num{text-align:right;}
+  table.data tfoot td{font-weight:700; border-top:2px solid var(--line); border-bottom:none; padding-top:9px;}
+
+  input[type=text],input[type=number],select,textarea{
+    font-family:var(--font-body); font-size:.83rem; padding:6px 8px; border:1px solid var(--line);
+    border-radius:var(--radius-s); background:var(--surface); color:var(--ink); width:100%;
+  }
+  input[type=number]{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent);}
+  input[type=checkbox]{width:16px; height:16px; accent-color:var(--accent);}
+  .col-narrow{width:6.2em;}
+  .col-med{width:9em;}
+
+  .btn{font-family:var(--font-body); font-size:.79rem; font-weight:600; padding:7px 13px; border-radius:var(--radius-s); border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer;}
+  .btn:hover{border-color:var(--accent); color:var(--accent);}
+  .btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent);}
+  .btn.primary:hover{opacity:.92; color:var(--accent-ink);}
+  .btn.ghost-danger{color:var(--danger); border-color:transparent; background:none; padding:4px 8px; font-size:.76rem;}
+  .btn.ghost-danger:hover{background:var(--danger-soft);}
+  .btn.small{padding:4px 10px; font-size:.74rem;}
+  .btn.block{width:100%;}
+
+  .pill{display:inline-flex; align-items:center; gap:6px; font-size:.68rem; font-weight:700; padding:3px 10px; border-radius:999px; white-space:nowrap;}
+  .pill.ok{background:var(--success-soft); color:var(--success);}
+  .pill.warn{background:var(--danger-soft); color:var(--danger);}
+  .pill.brass{background:var(--brass-soft); color:var(--brass);}
+  .pill.muted{background:var(--surface-2); color:var(--ink-muted); border:1px solid var(--line);}
+
+  tr.row-danger{background:var(--danger-soft);}
+  tr.row-danger:hover{background:var(--danger-soft);}
+
+  .grid2{display:grid; grid-template-columns:1fr 1fr; gap:18px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .field{display:flex; flex-direction:column; gap:5px; margin-bottom:13px;}
+  .field label{font-size:.75rem; font-weight:600; color:var(--ink-muted);}
+  .field .desc{font-size:.7rem; color:var(--ink-muted); font-weight:400;}
+  .suffix-wrap{position:relative;}
+  .suffix-wrap input{padding-right:30px;}
+  .suffix{position:absolute; right:9px; top:50%; transform:translateY(-50%); font-size:.76rem; color:var(--ink-muted); font-family:var(--font-mono);}
+
+  .tabgroup{margin-bottom:22px;}
+  .tabgroup h3{font-size:.9rem; margin-bottom:2px;}
+  .tabgroup .hint{font-size:.72rem; color:var(--ink-muted); margin:0 0 10px;}
+
+  .eyebrow{font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); margin-bottom:4px;}
+
+  /* Master-detail (Clientes) */
+  .master-detail{display:grid; grid-template-columns:280px 1fr; gap:18px; align-items:start;}
+  .client-list{display:flex; flex-direction:column; gap:8px;}
+  .client-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-m); padding:12px 13px; cursor:pointer; box-shadow:var(--shadow);}
+  .client-card:hover{border-color:var(--accent);}
+  .client-card.active{border-color:var(--accent); background:var(--accent-soft);}
+  .client-card .cname{font-weight:600; font-size:.88rem;}
+  .client-card .cmeta{display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:.72rem; color:var(--ink-muted);}
+  .client-card .cprice{font-family:var(--font-mono); font-weight:600; color:var(--accent); font-size:.86rem; margin-top:4px;}
+
+  .section-title{font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-muted); margin:18px 0 8px; padding-top:12px; border-top:1px solid var(--line);}
+  .section-title:first-child{margin-top:0; padding-top:0; border-top:none;}
+  .check-grid{display:grid; grid-template-columns:1fr 1fr; gap:6px 16px;}
+  .check-row{display:flex; align-items:center; gap:8px; font-size:.82rem; padding:5px 0;}
+  .check-row .h{margin-left:auto; font-size:.68rem; color:var(--ink-muted); font-family:var(--font-mono);}
+  .radio-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .radio-opt{display:flex; align-items:center; gap:6px; font-size:.82rem;}
+
+  .breakdown-bar{display:flex; height:26px; border-radius:6px; overflow:hidden; border:1px solid var(--line);}
+  .breakdown-bar div{height:100%;}
+  .breakdown-legend{display:flex; flex-wrap:wrap; gap:12px; margin-top:10px; font-size:.75rem;}
+  .breakdown-legend .lg{display:flex; align-items:center; gap:6px;}
+  .swatch{width:10px; height:10px; border-radius:3px; flex:none;}
+
+  .alert{border-radius:var(--radius-s); padding:11px 14px; font-size:.8rem; margin-bottom:12px; display:flex; gap:10px; align-items:flex-start;}
+  .alert.brass{background:var(--brass-soft); color:var(--brass); border:1px solid transparent;}
+  .alert.danger{background:var(--danger-soft); color:var(--danger);}
+  .alert b{font-weight:700;}
+
+  .proposal{max-width:680px;}
+  .proposal-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-l); box-shadow:var(--shadow); padding:30px 32px;}
+  .proposal-card .letterhead{display:flex; justify-content:space-between; align-items:baseline; border-bottom:2px solid var(--accent); padding-bottom:14px; margin-bottom:18px;}
+  .proposal-card .letterhead h2{font-size:1.28rem;}
+  .proposal-card .letterhead .tag{font-size:.66rem; text-transform:uppercase; letter-spacing:.08em; color:var(--accent); font-weight:700;}
+  .proposal-row{display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--line); font-size:.86rem; gap:16px;}
+  .proposal-row .k{color:var(--ink-muted);}
+  .proposal-row .v{font-family:var(--font-mono); font-variant-numeric:tabular-nums; text-align:right;}
+  .proposal-final{display:flex; justify-content:space-between; align-items:baseline; margin-top:14px; padding-top:14px; border-top:2px solid var(--accent);}
+  .proposal-final .k{font-family:var(--font-display); font-size:1.02rem; font-weight:600;}
+  .proposal-final .v{font-family:var(--font-mono); font-size:1.6rem; font-weight:600; color:var(--accent);}
+  .proposal-text{white-space:pre-wrap; font-size:.84rem; line-height:1.65; background:var(--surface-2); border:1px solid var(--line); border-radius:var(--radius-m); padding:18px 20px; margin-top:16px;}
+  .proposal-actions{display:flex; gap:10px; margin-top:16px;}
+
+  .empty{color:var(--ink-muted); font-size:.85rem; padding:20px 4px;}
+
+  @media (max-width:900px){
+    .shell{grid-template-columns:1fr;}
+    .sidebar{position:sticky; top:0; z-index:5; flex-direction:row; overflow-x:auto; padding:10px; align-items:center;}
+    .brand{padding:2px 10px;}
+    nav{flex-direction:row;}
+    .sidebar-foot{display:none;}
+    .grid2,.master-detail,.check-grid{grid-template-columns:1fr;}
+    .main{padding:20px 16px 50px;}
+  }
+  @media print{
+    .sidebar,.pagehead .btn,.proposal-actions,.status-row{display:none !important;}
+    .main{padding:0; max-height:none; overflow:visible;}
+    .shell{display:block;}
+    body{background:#fff;}
+  }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="name">Honorários Contábeis</span>
+      <span class="sub">Precificação técnica de clientes</span>
+    </div>
+    <nav id="nav"></nav>
+    <div class="sidebar-foot" id="statusBox"></div>
+  </aside>
+  <main class="main" id="main"></main>
+</div>
+
+<script id="__state__" type="application/json">{"ui": {"tab": "clientes", "clienteId": 3}, "custosFixos": [{"id": 1, "item": "Aluguel/Condomínio", "valor": 3500}, {"id": 2, "item": "Água, Energia e Internet", "valor": 600}, {"id": 3, "item": "Softwares e Sistemas (contábil/fiscal/DP)", "valor": 1800}, {"id": 4, "item": "Telefonia", "valor": 300}, {"id": 5, "item": "Material de Escritório", "valor": 250}, {"id": 6, "item": "Marketing e Comercial", "valor": 500}, {"id": 7, "item": "Contabilidade do Próprio Escritório", "valor": 400}, {"id": 8, "item": "Despesas Bancárias e Tarifas", "valor": 150}, {"id": 9, "item": "Depreciação de Equipamentos", "valor": 200}, {"id": 10, "item": "Outras Despesas Administrativas", "valor": 300}, {"id": 11, "item": "Seguro de Responsabilidade Civil Profissional (E&O)", "valor": 150}], "equipe": [{"id": 1, "nome": "Sócio 1", "cargo": "Sócio-Diretor / Contador Responsável", "funcao": "senior", "salario": 12000, "encargoPct": 0.2, "horas": 120}, {"id": 2, "nome": "Colaborador 1", "cargo": "Contador Sênior", "funcao": "contabil", "salario": 7000, "encargoPct": 0.75, "horas": 150}, {"id": 3, "nome": "Colaborador 2", "cargo": "Analista Contábil", "funcao": "contabil", "salario": 3500, "encargoPct": 0.75, "horas": 160}, {"id": 4, "nome": "Colaborador 3", "cargo": "Analista Fiscal", "funcao": "fiscal", "salario": 3800, "encargoPct": 0.75, "horas": 160}, {"id": 5, "nome": "Colaborador 4", "cargo": "Analista de Departamento Pessoal", "funcao": "dp", "salario": 3500, "encargoPct": 0.75, "horas": 160}, {"id": 6, "nome": "Colaborador 5", "cargo": "Assistente Administrativo / BPO", "funcao": "bpo", "salario": 2200, "encargoPct": 0.75, "horas": 160}], "parametros": {"margem": 0.3, "margemMinima": 0.1, "fatorRiscoPresumido": 1.4, "fatorRiscoReal": 2, "aliquotaEscritorio": 0.11, "pisoMercado": 450, "multiplicadorPiso": 3, "franquiaDocumentos": 50, "valorDocExcedente": 3.5, "franquiaLancamentos": 100, "valorLancamentoExcedente": 1.5, "taxaFechamentoAnual": 1800, "taxaInadimplencia": 0.03, "diaVencimento": 10, "multaAtraso": 0.02, "jurosMoraMes": 0.01, "indiceReajuste": "IGP-M", "avisoPrevioDias": 30, "honorarioDecimoQuarto": false}, "motor": {"baseFiscal": {"mei": 0.3, "simples": 1, "presumido": 2.5, "real": 5}, "baseContabil": {"mei": 0, "simples": 1, "presumido": 2.5, "real": 4.5}, "baseDPFixo": 0.5, "detalheAjusteFiscal": {"anexo1": 0, "anexo2": 0.5, "anexo3": 0, "anexo4": 1, "anexo5": 0.5, "comercio": 0, "industria": 2, "servicos": 0, "holding": 1, "misto": 1.5}, "taxaHoraDocSaida": 0.03, "taxaHoraDocEntrada": 0.02, "taxaHoraLancamento": 0.02, "taxaHoraColaborador": 1.2, "taxaHoraProlabore": 0.5, "taxaHoraTerceirizado": 0.4, "taxaHoraNotaEmitida": 0.1, "taxaHoraIRPF": 2, "taxaHoraAtendimento": 2, "baseBPO": 2, "taxaHoraBPO": 0.03, "riscoHoras": {"st_difal": 2, "industria_ficha": 3, "ecommerce": 2, "instituicao_financeira": 4, "saude_retencoes": 2}, "estoqueHoras": {"nenhum": 0, "periodico": 1, "perpetuo": 3}, "taxaHoraCnpjAdicional": 3.0}, "clientes": [{"id": 3, "nome": "Indústria Ferro & Cia", "regime": "real", "regimeDetalhe": "industria", "qtdDocSaida": 350, "qtdDocEntrada": 200, "qtdLancamentosBancarios": 400, "numColaboradores": 35, "numSociosProlabore": 3, "numTerceirizados": 2, "riscos": ["st_difal", "industria_ficha"], "estoque": "perpetuo", "servicos": {"bpo": true, "irpf": true, "qtdDeclaracoes": 3, "emissaoNF": false, "qtdNotas": 0, "atendimentoPresencial": true}, "obs": "Cliente exemplo — edite ou remova", "numCnpjsAdicionais": 0}, {"id": 4, "nome": "João da Silva MEI", "regime": "mei", "regimeDetalhe": null, "qtdDocSaida": 5, "qtdDocEntrada": 2, "qtdLancamentosBancarios": 10, "numColaboradores": 0, "numSociosProlabore": 0, "numTerceirizados": 0, "riscos": [], "estoque": "nenhum", "servicos": {"bpo": false, "irpf": false, "qtdDeclaracoes": 0, "emissaoNF": false, "qtdNotas": 0, "atendimentoPresencial": false}, "obs": "Cliente exemplo — edite ou remova", "numCnpjsAdicionais": 0}, {"id": 5, "nome": "EMPRESA EXEMPLO", "regime": "simples", "regimeDetalhe": "anexo3", "qtdDocSaida": 60, "qtdDocEntrada": 25, "qtdLancamentosBancarios": 40, "numColaboradores": 15, "numSociosProlabore": 1, "numTerceirizados": 0, "riscos": [], "estoque": "nenhum", "servicos": {"bpo": false, "irpf": false, "qtdDeclaracoes": 0, "emissaoNF": false, "qtdNotas": 0, "atendimentoPresencial": false}, "obs": "Migrado do teste anterior — revise volume, anexo e serviços após a atualização do motor de cálculo", "numCnpjsAdicionais": 0}], "nextIds": {"custoFixo": 12, "equipe": 7, "cliente": 6, "avulso": 12}, "avulsos": [{"id": 1, "nome": "Abertura de empresa (MEI/ME/EPP)", "valor": 600, "unidade": "por CNPJ", "obs": "Inclui viabilidade, contrato social e registros iniciais"}, {"id": 2, "nome": "Alteração contratual", "valor": 350, "unidade": "por evento", "obs": "Sócio, endereço, atividade, capital social"}, {"id": 3, "nome": "Baixa/encerramento de empresa", "valor": 500, "unidade": "por CNPJ", "obs": "Inclui certidões e distratos"}, {"id": 4, "nome": "Emissão/gestão de certificado digital", "valor": 180, "unidade": "por certificado/ano", "obs": "Repasse de custo + taxa de serviço"}, {"id": 5, "nome": "Parcelamento/negociação de débitos tributários", "valor": 450, "unidade": "por processo", "obs": "REFIS, transação tributária, parcelamento ordinário"}, {"id": 6, "nome": "Procuração e-CAC / portais governamentais", "valor": 0, "unidade": "cortesia", "obs": "Incluso na abertura de contrato"}, {"id": 7, "nome": "Defesas e impugnações administrativas", "valor": 800, "unidade": "por autuação", "obs": "Valor mínimo — ajustar por complexidade"}, {"id": 8, "nome": "Laudos e perícias contábeis", "valor": 1200, "unidade": "por laudo", "obs": "Valor mínimo — ajustar por escopo"}, {"id": 9, "nome": "Recuperação de créditos tributários", "valor": 0, "unidade": "% de êxito", "obs": "Tipicamente 10% a 20% do valor recuperado — negociar caso a caso"}, {"id": 10, "nome": "Diagnóstico/revisão tributária inicial", "valor": 900, "unidade": "por diagnóstico", "obs": "Recomendado antes de migrar regime tributário"}, {"id": 11, "nome": "Regularização de obrigações em atraso", "valor": 120, "unidade": "por competência", "obs": "Cliente que chega com pendências acumuladas"}]}</script>
+<script>
+(function(){
+  "use strict";
+
+  // ===================================================================
+  // Reference labels
+  // ===================================================================
+  var REGIMES = [
+    {key:"mei", label:"MEI"},
+    {key:"simples", label:"Simples Nacional"},
+    {key:"presumido", label:"Lucro Presumido"},
+    {key:"real", label:"Lucro Real"}
+  ];
+  var DETALHES = {
+    simples: [
+      {key:"anexo1", label:"Anexo I — Comércio"},
+      {key:"anexo2", label:"Anexo II — Indústria"},
+      {key:"anexo3", label:"Anexo III — Serviços"},
+      {key:"anexo4", label:"Anexo IV — Serviços (retenção INSS)"},
+      {key:"anexo5", label:"Anexo V — Serviços intelectuais"}
+    ],
+    presumido: [
+      {key:"comercio", label:"Comércio"}, {key:"industria", label:"Indústria"},
+      {key:"servicos", label:"Serviços"}, {key:"holding", label:"Holding"}, {key:"misto", label:"Misto"}
+    ],
+    real: [
+      {key:"comercio", label:"Comércio"}, {key:"industria", label:"Indústria"},
+      {key:"servicos", label:"Serviços"}, {key:"holding", label:"Holding"}, {key:"misto", label:"Misto"}
+    ],
+    mei: []
+  };
+  var RISCOS = [
+    {key:"st_difal", label:"Substituição Tributária de ICMS / ST-DIFAL"},
+    {key:"industria_ficha", label:"Indústria com ficha técnica"},
+    {key:"ecommerce", label:"E-commerce com múltiplos marketplaces"},
+    {key:"instituicao_financeira", label:"Instituição financeira"},
+    {key:"saude_retencoes", label:"Saúde/Médicos — retenções federais complexas"}
+  ];
+  var ESTOQUES = [
+    {key:"nenhum", label:"Não controla estoque"},
+    {key:"periodico", label:"Inventário periódico"},
+    {key:"perpetuo", label:"Inventário perpétuo"}
+  ];
+  var FUNCOES = [
+    {key:"fiscal", label:"Fiscal"}, {key:"contabil", label:"Contábil"},
+    {key:"dp", label:"Departamento Pessoal"}, {key:"bpo", label:"BPO Financeiro / Administrativo"},
+    {key:"senior", label:"Sênior / Responsável Técnico"}
+  ];
+  function defaultAvulsos(){
+    return [
+      {id:1, nome:"Abertura de empresa (MEI/ME/EPP)", valor:600, unidade:"por CNPJ", obs:"Inclui viabilidade, contrato social e registros iniciais"},
+      {id:2, nome:"Alteração contratual", valor:350, unidade:"por evento", obs:"Sócio, endereço, atividade, capital social"},
+      {id:3, nome:"Baixa/encerramento de empresa", valor:500, unidade:"por CNPJ", obs:"Inclui certidões e distratos"},
+      {id:4, nome:"Emissão/gestão de certificado digital", valor:180, unidade:"por certificado/ano", obs:"Repasse de custo + taxa de serviço"},
+      {id:5, nome:"Parcelamento/negociação de débitos tributários", valor:450, unidade:"por processo", obs:"REFIS, transação tributária, parcelamento ordinário"},
+      {id:6, nome:"Procuração e-CAC / portais governamentais", valor:0, unidade:"cortesia", obs:"Incluso na abertura de contrato"},
+      {id:7, nome:"Defesas e impugnações administrativas", valor:800, unidade:"por autuação", obs:"Valor mínimo — ajustar por complexidade"},
+      {id:8, nome:"Laudos e perícias contábeis", valor:1200, unidade:"por laudo", obs:"Valor mínimo — ajustar por escopo"},
+      {id:9, nome:"Recuperação de créditos tributários", valor:0, unidade:"% de êxito", obs:"Tipicamente 10% a 20% do valor recuperado — negociar caso a caso"},
+      {id:10, nome:"Diagnóstico/revisão tributária inicial", valor:900, unidade:"por diagnóstico", obs:"Recomendado antes de migrar regime tributário"},
+      {id:11, nome:"Regularização de obrigações em atraso", valor:120, unidade:"por competência", obs:"Cliente que chega com pendências acumuladas"}
+    ];
+  }
+
+  // ===================================================================
+  // Default state
+  // ===================================================================
+  function defaultState(){
+    return {
+      ui: { tab:"painel" },
+      custosFixos: [
+        {id:1, item:"Aluguel/Condomínio", valor:3500},
+        {id:2, item:"Água, Energia e Internet", valor:600},
+        {id:3, item:"Softwares e Sistemas (contábil/fiscal/DP)", valor:1800},
+        {id:4, item:"Telefonia", valor:300},
+        {id:5, item:"Material de Escritório", valor:250},
+        {id:6, item:"Marketing e Comercial", valor:500},
+        {id:7, item:"Contabilidade do Próprio Escritório", valor:400},
+        {id:8, item:"Despesas Bancárias e Tarifas", valor:150},
+        {id:9, item:"Depreciação de Equipamentos", valor:200},
+        {id:10, item:"Outras Despesas Administrativas", valor:300},
+        {id:11, item:"Seguro de Responsabilidade Civil Profissional (E&O)", valor:150}
+      ],
+      equipe: [
+        {id:1, nome:"Sócio 1", cargo:"Sócio-Diretor / Contador Responsável", funcao:"senior", salario:12000, encargoPct:0.20, horas:120},
+        {id:2, nome:"Colaborador 1", cargo:"Contador Sênior", funcao:"contabil", salario:7000, encargoPct:0.75, horas:150},
+        {id:3, nome:"Colaborador 2", cargo:"Analista Contábil", funcao:"contabil", salario:3500, encargoPct:0.75, horas:160},
+        {id:4, nome:"Colaborador 3", cargo:"Analista Fiscal", funcao:"fiscal", salario:3800, encargoPct:0.75, horas:160},
+        {id:5, nome:"Colaborador 4", cargo:"Analista de Departamento Pessoal", funcao:"dp", salario:3500, encargoPct:0.75, horas:160},
+        {id:6, nome:"Colaborador 5", cargo:"Assistente Administrativo / BPO", funcao:"bpo", salario:2200, encargoPct:0.75, horas:160}
+      ],
+      parametros: {
+        margem:0.30, margemMinima:0.10,
+        fatorRiscoPresumido:1.4, fatorRiscoReal:2.0,
+        aliquotaEscritorio:0.11,
+        taxaInadimplencia:0.03,
+        pisoMercado:450, multiplicadorPiso:3,
+        franquiaDocumentos:50, valorDocExcedente:3.50,
+        franquiaLancamentos:100, valorLancamentoExcedente:1.50,
+        taxaFechamentoAnual:1800,
+        diaVencimento:10, multaAtraso:0.02, jurosMoraMes:0.01,
+        indiceReajuste:"IGP-M", avisoPrevioDias:30, honorarioDecimoQuarto:false
+      },
+      motor: {
+        baseFiscal:{mei:0.3, simples:1.0, presumido:2.5, real:5.0},
+        baseContabil:{mei:0, simples:1.0, presumido:2.5, real:4.5},
+        baseDPFixo:0.5,
+        detalheAjusteFiscal:{anexo1:0, anexo2:0.5, anexo3:0, anexo4:1.0, anexo5:0.5, comercio:0, industria:2.0, servicos:0, holding:1.0, misto:1.5},
+        taxaHoraDocSaida:0.03, taxaHoraDocEntrada:0.02, taxaHoraLancamento:0.02,
+        taxaHoraColaborador:1.2, taxaHoraProlabore:0.5, taxaHoraTerceirizado:0.4,
+        taxaHoraNotaEmitida:0.1, taxaHoraIRPF:2.0, taxaHoraAtendimento:2.0,
+        baseBPO:2.0, taxaHoraBPO:0.03, taxaHoraCnpjAdicional:3.0,
+        riscoHoras:{st_difal:2.0, industria_ficha:3.0, ecommerce:2.0, instituicao_financeira:4.0, saude_retencoes:2.0},
+        estoqueHoras:{nenhum:0, periodico:1.0, perpetuo:3.0}
+      },
+      avulsos: defaultAvulsos(),
+      clientes: [
+        {id:1, nome:"Padaria Bom Pão Ltda", regime:"simples", regimeDetalhe:"anexo1",
+         qtdDocSaida:80, qtdDocEntrada:40, qtdLancamentosBancarios:120,
+         numColaboradores:4, numSociosProlabore:1, numTerceirizados:0, numCnpjsAdicionais:0,
+         riscos:[], estoque:"periodico",
+         servicos:{bpo:false, irpf:false, qtdDeclaracoes:0, emissaoNF:false, qtdNotas:0, atendimentoPresencial:false},
+         obs:"Cliente exemplo — edite ou remova"},
+        {id:2, nome:"Consultoria Alfa EIRELI", regime:"presumido", regimeDetalhe:"servicos",
+         qtdDocSaida:60, qtdDocEntrada:20, qtdLancamentosBancarios:200,
+         numColaboradores:8, numSociosProlabore:2, numTerceirizados:1, numCnpjsAdicionais:1,
+         riscos:[], estoque:"nenhum",
+         servicos:{bpo:false, irpf:true, qtdDeclaracoes:2, emissaoNF:false, qtdNotas:0, atendimentoPresencial:true},
+         obs:"Cliente exemplo — edite ou remova. Grupo com 1 CNPJ adicional (holding)"},
+        {id:3, nome:"Indústria Ferro & Cia", regime:"real", regimeDetalhe:"industria",
+         qtdDocSaida:350, qtdDocEntrada:200, qtdLancamentosBancarios:400,
+         numColaboradores:35, numSociosProlabore:3, numTerceirizados:2, numCnpjsAdicionais:0,
+         riscos:["st_difal","industria_ficha"], estoque:"perpetuo",
+         servicos:{bpo:true, irpf:true, qtdDeclaracoes:3, emissaoNF:false, qtdNotas:0, atendimentoPresencial:true},
+         obs:"Cliente exemplo — edite ou remova"},
+        {id:4, nome:"João da Silva MEI", regime:"mei", regimeDetalhe:null,
+         qtdDocSaida:5, qtdDocEntrada:2, qtdLancamentosBancarios:10,
+         numColaboradores:0, numSociosProlabore:0, numTerceirizados:0, numCnpjsAdicionais:0,
+         riscos:[], estoque:"nenhum",
+         servicos:{bpo:false, irpf:false, qtdDeclaracoes:0, emissaoNF:false, qtdNotas:0, atendimentoPresencial:false},
+         obs:"Cliente exemplo — edite ou remova"},
+        {id:5, nome:"EMPRESA EXEMPLO", regime:"simples", regimeDetalhe:"anexo3",
+         qtdDocSaida:60, qtdDocEntrada:25, qtdLancamentosBancarios:40,
+         numColaboradores:15, numSociosProlabore:1, numTerceirizados:0, numCnpjsAdicionais:0,
+         riscos:[], estoque:"nenhum",
+         servicos:{bpo:false, irpf:false, qtdDeclaracoes:0, emissaoNF:false, qtdNotas:0, atendimentoPresencial:false},
+         obs:"Migrado do teste anterior — revise volume, anexo e serviços após a atualização do motor de cálculo"}
+      ],
+      nextIds:{custoFixo:12, equipe:7, cliente:6, avulso:12}
+    };
+  }
+
+  function normalizeState(state){
+    if(!state.nextIds) state.nextIds = {custoFixo:1, equipe:1, cliente:1, avulso:1};
+    if(!state.avulsos || !state.avulsos.length) state.avulsos = defaultAvulsos();
+    if(state.nextIds.avulso==null) state.nextIds.avulso = state.avulsos.reduce(function(m,a){return Math.max(m,a.id);},0)+1;
+    if(!state.clientes) state.clientes=[];
+    state.clientes.forEach(function(c){ if(c.numCnpjsAdicionais==null) c.numCnpjsAdicionais=0; });
+    if(!state.parametros) state.parametros={};
+    if(state.parametros.taxaInadimplencia==null) state.parametros.taxaInadimplencia=0.03;
+    if(state.parametros.diaVencimento==null) state.parametros.diaVencimento=10;
+    if(state.parametros.multaAtraso==null) state.parametros.multaAtraso=0.02;
+    if(state.parametros.jurosMoraMes==null) state.parametros.jurosMoraMes=0.01;
+    if(state.parametros.indiceReajuste==null) state.parametros.indiceReajuste="IGP-M";
+    if(state.parametros.avisoPrevioDias==null) state.parametros.avisoPrevioDias=30;
+    if(state.parametros.honorarioDecimoQuarto==null) state.parametros.honorarioDecimoQuarto=false;
+    if(!state.motor) state.motor={};
+    if(state.motor.taxaHoraCnpjAdicional==null) state.motor.taxaHoraCnpjAdicional=3.0;
+    if(!state.ui) state.ui={tab:"painel"};
+    return state;
+  }
+
+  var state;
+  try{
+    var raw = (document.getElementById("__state__").textContent || "").trim();
+    state = raw && raw !== "{}" ? JSON.parse(raw) : defaultState();
+  }catch(e){ state = defaultState(); }
+  normalizeState(state);
+
+  // ===================================================================
+  // Formatting
+  // ===================================================================
+  function brl(n){ n=isFinite(n)?n:0; return "R$ " + n.toLocaleString("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2}); }
+  function pct(n,d){ n=isFinite(n)?n:0; var dd=d==null?1:d; return (n*100).toLocaleString("pt-BR",{minimumFractionDigits:dd,maximumFractionDigits:dd})+"%"; }
+  function num(n,d){ n=isFinite(n)?n:0; return n.toLocaleString("pt-BR",{maximumFractionDigits:d==null?1:d}); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+  function labelOf(list,key){ var r=list.find(function(x){return x.key===key;}); return r?r.label:"—"; }
+
+  // ===================================================================
+  // Pricing engine (pure functions)
+  // ===================================================================
+  function totalPessoal(s){ return s.equipe.reduce(function(a,e){return a+e.salario*(1+e.encargoPct);},0); }
+  function totalFixos(s){ return s.custosFixos.reduce(function(a,c){return a+c.valor;},0); }
+  function totalHorasEquipe(s){ return s.equipe.reduce(function(a,e){return a+e.horas;},0); }
+  function custoHoraFuncao(s, funcao){
+    var membros = s.equipe.filter(function(e){return e.funcao===funcao;});
+    var custo = membros.reduce(function(a,e){return a+e.salario*(1+e.encargoPct);},0);
+    var horas = membros.reduce(function(a,e){return a+e.horas;},0);
+    if(horas>0) return custo/horas;
+    var h = totalHorasEquipe(s);
+    return h>0 ? (totalPessoal(s))/h : 0; // fallback: média geral do escritório
+  }
+  function custoHoraGeral(s){
+    var h = totalHorasEquipe(s);
+    return h>0 ? (totalPessoal(s)+totalFixos(s))/h : 0;
+  }
+
+  function horasGrupoCnpj(c, s){ return (c.numCnpjsAdicionais||0) * s.motor.taxaHoraCnpjAdicional; }
+  function horasFiscal(c, s){
+    var m = s.motor;
+    var h = m.baseFiscal[c.regime]||0;
+    h += (c.qtdDocSaida||0)*m.taxaHoraDocSaida + (c.qtdDocEntrada||0)*m.taxaHoraDocEntrada;
+    if(c.regimeDetalhe) h += m.detalheAjusteFiscal[c.regimeDetalhe]||0;
+    (c.riscos||[]).forEach(function(r){ h += m.riscoHoras[r]||0; });
+    h += m.estoqueHoras[c.estoque]||0;
+    h += horasGrupoCnpj(c,s)/2;
+    return h;
+  }
+  function horasContabil(c, s){
+    var m = s.motor;
+    var h = m.baseContabil[c.regime]||0;
+    h += (c.qtdLancamentosBancarios||0)*m.taxaHoraLancamento;
+    if(c.servicos.emissaoNF) h += (c.servicos.qtdNotas||0)*m.taxaHoraNotaEmitida;
+    h += horasGrupoCnpj(c,s)/2;
+    return h;
+  }
+  function horasDP(c, s){
+    var m = s.motor;
+    var h = ((c.numColaboradores||0)>0 || (c.numSociosProlabore||0)>0) ? m.baseDPFixo : 0;
+    h += (c.numColaboradores||0)*m.taxaHoraColaborador;
+    h += (c.numSociosProlabore||0)*m.taxaHoraProlabore;
+    h += (c.numTerceirizados||0)*m.taxaHoraTerceirizado;
+    return h;
+  }
+  function horasBPO(c, s){
+    if(!c.servicos.bpo) return 0;
+    return s.motor.baseBPO + (c.qtdLancamentosBancarios||0)*s.motor.taxaHoraBPO;
+  }
+  function horasIRPF(c, s){
+    if(!c.servicos.irpf) return 0;
+    return (c.servicos.qtdDeclaracoes||0)*s.motor.taxaHoraIRPF/12;
+  }
+  function horasAtendimento(c, s){ return c.servicos.atendimentoPresencial ? s.motor.taxaHoraAtendimento : 0; }
+  function horasTotaisCliente(c, s){
+    return horasFiscal(c,s)+horasContabil(c,s)+horasDP(c,s)+horasBPO(c,s)+horasIRPF(c,s)+horasAtendimento(c,s);
+  }
+  function custoDireto(c, s){
+    return horasFiscal(c,s)*custoHoraFuncao(s,"fiscal")
+         + horasContabil(c,s)*custoHoraFuncao(s,"contabil")
+         + horasDP(c,s)*custoHoraFuncao(s,"dp")
+         + horasBPO(c,s)*custoHoraFuncao(s,"bpo")
+         + (horasIRPF(c,s)+horasAtendimento(c,s))*custoHoraFuncao(s,"senior");
+  }
+  function custoIndireto(c, s){
+    var th = totalHorasEquipe(s);
+    return th>0 ? (horasTotaisCliente(c,s)/th)*totalFixos(s) : 0;
+  }
+  function fatorRisco(c, s){
+    if(c.regime==="presumido") return s.parametros.fatorRiscoPresumido;
+    if(c.regime==="real") return s.parametros.fatorRiscoReal;
+    return 1.0;
+  }
+  function precoPreTax(c, s){ return (custoDireto(c,s)+custoIndireto(c,s))*(1+s.parametros.margem)*fatorRisco(c,s); }
+  function precoComImpostos(c, s){
+    var aliq = Math.min(0.95, Math.max(0, s.parametros.aliquotaEscritorio + s.parametros.taxaInadimplencia));
+    return precoPreTax(c,s)/(1-aliq);
+  }
+  function pisoAbsoluto(s){ return Math.max(s.parametros.pisoMercado, s.parametros.multiplicadorPiso*custoHoraFuncao(s,"senior")); }
+  function honorarioBase(c, s){ return Math.max(precoComImpostos(c,s), pisoAbsoluto(s)); }
+  function pisoAplicado(c, s){ return precoComImpostos(c,s) < pisoAbsoluto(s); }
+  function excedenteDocs(c, s){ var docs=(c.qtdDocSaida||0)+(c.qtdDocEntrada||0); return Math.max(0, docs - s.parametros.franquiaDocumentos)*s.parametros.valorDocExcedente; }
+  function excedenteLancamentos(c, s){ return Math.max(0, (c.qtdLancamentosBancarios||0) - s.parametros.franquiaLancamentos)*s.parametros.valorLancamentoExcedente; }
+  function excedentesTotal(c, s){ return excedenteDocs(c,s)+excedenteLancamentos(c,s); }
+  function honorarioTotal(c, s){ return honorarioBase(c,s)+excedentesTotal(c,s); }
+  function breakdown(c, s){
+    var hb = honorarioBase(c,s);
+    var impostos = hb*s.parametros.aliquotaEscritorio;
+    var inadimplencia = hb*s.parametros.taxaInadimplencia;
+    var ce = custoDireto(c,s);
+    var ci = custoIndireto(c,s);
+    var margem = Math.max(0, hb-impostos-inadimplencia-ce-ci);
+    return {impostos:impostos, inadimplencia:inadimplencia, custosEquipe:ce, custosOperacionais:ci, margem:margem, total:hb};
+  }
+  function margemRealPct(c, s){ var b=breakdown(c,s); return b.total>0 ? b.margem/b.total : 0; }
+  function temSazonalidade(c){ return c.regime==="real" || ((c.regime==="presumido") && c.regimeDetalhe==="industria"); }
+
+  // ===================================================================
+  // Persistence (armazenamento local do navegador — localStorage)
+  // ===================================================================
+  var STORAGE_KEY = "honorarios_contabeis_state_v1";
+  var storageOK = false, saveTimer = null, saveStatus = "init";
+  function queueSave(){
+    saveStatus="pending"; renderStatus();
+    clearTimeout(saveTimer); saveTimer=setTimeout(doSave,400);
+  }
+  function doSave(){
+    if(!storageOK){ saveStatus="readonly"; renderStatus(); return; }
+    saveStatus="saving"; renderStatus();
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      saveStatus="saved"; renderStatus();
+    }catch(e){ saveStatus="error"; renderStatus(); }
+  }
+  function renderStatus(){
+    var box=document.getElementById("statusBox"); if(!box) return;
+    var map={
+      init:["dot","Carregando…"], readonly:["dot error","Este navegador não permite salvar dados (modo privado/bloqueio de armazenamento)"],
+      idle:["dot saved","Tudo salvo neste navegador"], pending:["dot pending","Alterações pendentes…"],
+      saving:["dot saving","Salvando…"], saved:["dot saved","Salvo neste navegador"],
+      error:["dot error","Não foi possível salvar"]
+    };
+    var m=map[saveStatus]||map.idle;
+    box.innerHTML='<div class="status-row"><span class="'+m[0]+'"></span><span>'+esc(m[1])+"</span></div>"+
+      '<div style="opacity:.8; margin-bottom:8px">Os dados ficam salvos apenas neste computador/navegador. Faça backup regularmente.</div>'+
+      '<div style="display:flex; gap:6px; flex-wrap:wrap">'+
+        '<button class="btn small" style="flex:1" onclick="App.exportBackup()">⭳ Backup</button>'+
+        '<button class="btn small" style="flex:1" onclick="document.getElementById(\'importFile\').click()">⭱ Importar</button>'+
+      '</div>'+
+      '<input type="file" id="importFile" accept="application/json" style="display:none" onchange="App.importBackup(this.files[0]); this.value=\'\'">';
+  }
+  function initPersistence(){
+    try{
+      var t="__t__"+Date.now();
+      localStorage.setItem(t,"1"); localStorage.removeItem(t);
+      storageOK=true;
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if(saved){
+        var parsed = JSON.parse(saved);
+        if(parsed && parsed.clientes) applyLoadedState(parsed);
+      }
+      saveStatus="idle";
+    }catch(e){ storageOK=false; saveStatus="readonly"; }
+    renderStatus();
+  }
+  function applyLoadedState(parsed){
+    state = parsed;
+    normalizeState(state);
+    renderApp();
+  }
+  function exportBackup(){
+    var blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    var stamp = new Date().toISOString().slice(0,10);
+    a.href=url; a.download="backup-honorarios-"+stamp+".json"; document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  }
+  function importBackup(file){
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var parsed = JSON.parse(reader.result);
+        if(!parsed || !parsed.clientes) throw new Error("formato inválido");
+        if(!window.confirm("Importar este backup vai substituir todos os dados atuais neste navegador. Continuar?")) return;
+        applyLoadedState(parsed);
+        queueSave();
+      }catch(e){ window.alert("Não foi possível importar: arquivo inválido."); }
+    };
+    reader.readAsText(file);
+  }
+
+  // ===================================================================
+  // Mutators
+  // ===================================================================
+  function commit(){ renderApp(); queueSave(); }
+
+  function updateCustoFixo(id,field,val){
+    var r=state.custosFixos.find(function(x){return x.id===id;}); if(!r) return;
+    r[field]=field==="valor"?(parseFloat(val)||0):val; commit();
+  }
+  function addCustoFixo(){ state.custosFixos.push({id:state.nextIds.custoFixo++,item:"Novo item",valor:0}); commit(); }
+  function removeCustoFixo(id){ state.custosFixos=state.custosFixos.filter(function(x){return x.id!==id;}); commit(); }
+
+  function updateEquipe(id,field,val){
+    var r=state.equipe.find(function(x){return x.id===id;}); if(!r) return;
+    if(field==="salario"||field==="horas") r[field]=parseFloat(val)||0;
+    else if(field==="encargoPct") r[field]=(parseFloat(val)||0)/100;
+    else r[field]=val;
+    commit();
+  }
+  function addEquipe(){ state.equipe.push({id:state.nextIds.equipe++,nome:"Novo Colaborador",cargo:"Cargo",funcao:"contabil",salario:0,encargoPct:0.75,horas:160}); commit(); }
+  function removeEquipe(id){ state.equipe=state.equipe.filter(function(x){return x.id!==id;}); commit(); }
+
+  var PCT_PARAMS = {margem:1,margemMinima:1,fatorRiscoPresumido:0,fatorRiscoReal:0,aliquotaEscritorio:1,taxaInadimplencia:1,multaAtraso:1,jurosMoraMes:1};
+  var TEXT_PARAMS = {indiceReajuste:1};
+  function updateParametro(field,val){
+    if(TEXT_PARAMS[field]) state.parametros[field]=val;
+    else state.parametros[field] = PCT_PARAMS[field]===1 ? (parseFloat(val)||0)/100 : (parseFloat(val)||0);
+    commit();
+  }
+  function updateParametroBool(field,val){ state.parametros[field]=!!val; commit(); }
+  function updateMotor(field,val){ state.motor[field]=parseFloat(val)||0; commit(); }
+  function updateMotorMap(mapName,key,val){ state.motor[mapName][key]=parseFloat(val)||0; commit(); }
+
+  function updateCliente(id,field,val){
+    var r=state.clientes.find(function(x){return x.id===id;}); if(!r) return;
+    if(field==="regime"){
+      r.regime=val;
+      var opts=DETALHES[val]||[];
+      r.regimeDetalhe = opts.length ? opts[0].key : null;
+    } else if(["qtdDocSaida","qtdDocEntrada","qtdLancamentosBancarios","numColaboradores","numSociosProlabore","numTerceirizados","numCnpjsAdicionais"].indexOf(field)>=0){
+      r[field]=parseInt(val)||0;
+    } else { r[field]=val; }
+    commit();
+  }
+  function toggleRisco(id,key,checked){
+    var r=state.clientes.find(function(x){return x.id===id;}); if(!r) return;
+    var set=new Set(r.riscos||[]);
+    if(checked) set.add(key); else set.delete(key);
+    r.riscos=Array.from(set); commit();
+  }
+  function updateServico(id,field,val){
+    var r=state.clientes.find(function(x){return x.id===id;}); if(!r) return;
+    if(field==="bpo"||field==="irpf"||field==="emissaoNF"||field==="atendimentoPresencial") r.servicos[field]=!!val;
+    else if(field==="qtdDeclaracoes"||field==="qtdNotas") r.servicos[field]=parseInt(val)||0;
+    commit();
+  }
+  function addCliente(){
+    state.clientes.push({
+      id:state.nextIds.cliente++, nome:"Novo Cliente", regime:"simples", regimeDetalhe:"anexo3",
+      qtdDocSaida:0, qtdDocEntrada:0, qtdLancamentosBancarios:0,
+      numColaboradores:0, numSociosProlabore:1, numTerceirizados:0, numCnpjsAdicionais:0,
+      riscos:[], estoque:"nenhum",
+      servicos:{bpo:false, irpf:false, qtdDeclaracoes:0, emissaoNF:false, qtdNotas:0, atendimentoPresencial:false},
+      obs:""
+    });
+    state.ui.clienteId = state.clientes[state.clientes.length-1].id;
+    commit();
+  }
+  function removeCliente(id){
+    state.clientes=state.clientes.filter(function(x){return x.id!==id;});
+    if(state.ui.clienteId===id) state.ui.clienteId=null;
+    commit();
+  }
+  function updateAvulso(id,field,val){
+    var r=state.avulsos.find(function(x){return x.id===id;}); if(!r) return;
+    r[field]=field==="valor"?(parseFloat(val)||0):val; commit();
+  }
+  function addAvulso(){ state.avulsos.push({id:state.nextIds.avulso++, nome:"Novo serviço avulso", valor:0, unidade:"por evento", obs:""}); commit(); }
+  function removeAvulso(id){ state.avulsos=state.avulsos.filter(function(x){return x.id!==id;}); commit(); }
+  function selectCliente(id){ state.ui.clienteId=id; renderApp(); }
+  function setTab(tab){ state.ui.tab=tab; commit(); }
+  function setSimCliente(id){ state.ui.simId=id; renderApp(); }
+
+  function proposalText(c, s){
+    var b = breakdown(c,s);
+    var p = s.parametros;
+    var servicos = ["Escrituração contábil e fiscal conforme o regime tributário"];
+    if(c.servicos.bpo) servicos.push("BPO Financeiro (contas a pagar e a receber)");
+    if(c.servicos.irpf) servicos.push("Declaração de Imposto de Renda Pessoa Física dos sócios ("+(c.servicos.qtdDeclaracoes||0)+" declaração(ões)/ano)");
+    if(c.servicos.emissaoNF) servicos.push("Emissão de notas fiscais pela contabilidade");
+    if(c.servicos.atendimentoPresencial) servicos.push("Reunião executiva mensal de alinhamento");
+    if((c.numColaboradores||0)>0 || (c.numSociosProlabore||0)>0) servicos.push("Departamento pessoal completo (folha, admissões/demissões, eSocial)");
+    if((c.numCnpjsAdicionais||0)>0) servicos.push("Consolidação de grupo econômico — "+c.numCnpjsAdicionais+" CNPJ(s) adicional(is) incluído(s)");
+
+    var extras = ["Documentos além da franquia de "+p.franquiaDocumentos+"/mês: "+brl(p.valorDocExcedente)+" por documento excedente",
+      "Lançamentos bancários além da franquia de "+p.franquiaLancamentos+"/mês: "+brl(p.valorLancamentoExcedente)+" por lançamento excedente"];
+    if(!c.servicos.irpf) extras.push("Declaração de IRPF dos sócios (sob consulta)");
+    if(!c.servicos.emissaoNF) extras.push("Emissão de notas fiscais pela contabilidade (sob consulta)");
+    if(!c.servicos.atendimentoPresencial) extras.push("Reuniões presenciais avulsas (sob consulta)");
+    if(temSazonalidade(c)) extras.push("Taxa de Fechamento Anual (Balanço, ECD/ECF): "+brl(p.taxaFechamentoAnual)+", cobrança anual à parte");
+    if(p.honorarioDecimoQuarto) extras.push("Honorário de dezembro cobrado em dobro (14º), praxe de mercado para fechamento anual");
+    extras.push("Serviços societários e pontuais (aberturas, alterações, baixas, defesas, parcelamentos etc.): ver Tabela de Serviços Avulsos anexa");
+
+    var linhas = [];
+    linhas.push("PROPOSTA DE HONORÁRIOS CONTÁBEIS");
+    linhas.push(c.nome);
+    linhas.push("");
+    linhas.push("Regime tributário: "+labelOf(REGIMES,c.regime)+(c.regimeDetalhe?" — "+labelOf(DETALHES[c.regime]||[],c.regimeDetalhe):""));
+    linhas.push("Carga horária técnica estimada: "+num(horasTotaisCliente(c,s))+" horas/mês");
+    linhas.push("");
+    linhas.push("Serviços inclusos:");
+    servicos.forEach(function(x){ linhas.push("  • "+x); });
+    linhas.push("");
+    linhas.push("Serviços e cobranças extras (fora do honorário fixo):");
+    extras.forEach(function(x){ linhas.push("  • "+x); });
+    linhas.push("");
+    linhas.push("Honorário mensal sugerido: "+brl(b.total));
+    if(excedentesTotal(c,s)>0) linhas.push("Excedentes previstos no volume atual: "+brl(excedentesTotal(c,s))+" (total do mês: "+brl(honorarioTotal(c,s))+")");
+    linhas.push("");
+    linhas.push("Condições comerciais:");
+    linhas.push("  • Vencimento: dia "+p.diaVencimento+" de cada mês");
+    linhas.push("  • Atraso: multa de "+pct(p.multaAtraso,0)+" + juros de mora de "+pct(p.jurosMoraMes,1)+"/mês");
+    linhas.push("  • Reajuste anual pelo índice "+p.indiceReajuste+" ou negociação entre as partes");
+    linhas.push("  • Rescisão: aviso prévio de "+p.avisoPrevioDias+" dias por escrito, sem multa");
+    linhas.push("");
+    if(state.avulsos && state.avulsos.length){
+      linhas.push("Tabela de Serviços Avulsos (cobrança à parte, sob demanda):");
+      state.avulsos.forEach(function(a){
+        linhas.push("  • "+a.nome+" — "+(a.valor>0?brl(a.valor):"sob orçamento")+" ("+a.unidade+")");
+      });
+    }
+    return linhas.join("\n");
+  }
+  function copyProposal(id){
+    var c=state.clientes.find(function(x){return x.id===id;}); if(!c) return;
+    var text=proposalText(c,state);
+    if(navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(function(){});
+  }
+
+  // ===================================================================
+  // Small shared builders
+  // ===================================================================
+  function selectHTML(list,selected,onchange){
+    return '<select onchange="'+onchange+'">'+list.map(function(r){
+      return '<option value="'+esc(r.key)+'"'+(r.key===selected?" selected":"")+'>'+esc(r.label)+'</option>';
+    }).join("")+'</select>';
+  }
+
+  // ===================================================================
+  // Nav
+  // ===================================================================
+  var TABS=[
+    {id:"painel",idx:"00",label:"Painel"},
+    {id:"custos",idx:"01",label:"Custos Fixos"},
+    {id:"equipe",idx:"02",label:"Equipe"},
+    {id:"parametros",idx:"03",label:"Parâmetros"},
+    {id:"motor",idx:"04",label:"Motor de Cálculo"},
+    {id:"avulsos",idx:"05",label:"Serviços Avulsos"},
+    {id:"clientes",idx:"06",label:"Clientes"},
+    {id:"simulador",idx:"07",label:"Proposta"}
+  ];
+  function renderNav(){
+    document.getElementById("nav").innerHTML=TABS.map(function(t){
+      return '<button class="navitem'+(state.ui.tab===t.id?" active":"")+'" onclick="App.setTab(\''+t.id+'\')">'+
+        '<span class="idx">'+t.idx+'</span><span>'+esc(t.label)+'</span></button>';
+    }).join("");
+  }
+
+  // ===================================================================
+  // Painel
+  // ===================================================================
+  function renderPainel(){
+    var s=state;
+    var ordenados=s.clientes.slice().sort(function(a,b){return honorarioTotal(b,s)-honorarioTotal(a,s);});
+    var receitaTotal=s.clientes.reduce(function(a,c){return a+honorarioTotal(c,s);},0);
+    var nPiso=s.clientes.filter(function(c){return pisoAplicado(c,s);}).length;
+    var rows=ordenados.slice(0,8).map(function(c){
+      var ht=honorarioTotal(c,s);
+      return '<tr>'+
+        '<td>'+esc(c.nome)+'</td>'+
+        '<td>'+esc(labelOf(REGIMES,c.regime))+(c.regimeDetalhe?' <span style="color:var(--ink-muted)">/ '+esc(labelOf(DETALHES[c.regime]||[],c.regimeDetalhe))+'</span>':'')+'</td>'+
+        '<td class="num">'+num(horasTotaisCliente(c,s))+' h</td>'+
+        '<td class="num">'+brl(ht)+'</td>'+
+        '<td>'+(pisoAplicado(c,s)?'<span class="pill brass">Piso aplicado</span>':(fatorRisco(c,s)>1?'<span class="pill warn">Fator de risco '+fatorRisco(c,s).toFixed(1)+'x</span>':'<span class="pill ok">Padrão</span>'))+'</td>'+
+      '</tr>';
+    }).join("");
+    var funcRows=FUNCOES.map(function(f){
+      return '<tr><td>'+esc(f.label)+'</td><td class="num">'+brl(custoHoraFuncao(s,f.key))+'</td></tr>';
+    }).join("");
+    return (
+      '<div class="pagehead"><div><h1>Painel</h1><p>Visão geral do custo-hora por função, da carteira de clientes e da receita mensal projetada.</p></div></div>'+
+      '<div class="kpi-grid">'+
+        '<div class="kpi"><div class="label">Custo-hora geral do escritório</div><div class="value">'+brl(custoHoraGeral(s))+'</div><div class="note">Pessoal + fixos ÷ horas produtivas</div></div>'+
+        '<div class="kpi"><div class="label">Custo mensal — pessoal</div><div class="value">'+brl(totalPessoal(s))+'</div><div class="note">'+s.equipe.length+' colaborador(es)</div></div>'+
+        '<div class="kpi"><div class="label">Piso de honorários</div><div class="value">'+brl(pisoAbsoluto(s))+'</div><div class="note">'+num(s.parametros.multiplicadorPiso,0)+'h do sênior ou piso de mercado</div></div>'+
+        '<div class="kpi"><div class="label">Receita mensal projetada</div><div class="value">'+brl(receitaTotal)+'</div><div class="note">'+s.clientes.length+' cliente(s) — '+nPiso+' no piso</div></div>'+
+      '</div>'+
+      '<div class="grid2">'+
+        '<div class="panel">'+
+          '<div class="panel-head"><h2>Clientes por honorário</h2><button class="btn small" onclick="App.setTab(\'clientes\')">Ver todos →</button></div>'+
+          '<p class="hint">Ordenado do maior para o menor honorário total (base + excedentes).</p>'+
+          (s.clientes.length?
+            '<div class="table-wrap"><table class="data"><thead><tr><th>Cliente</th><th>Regime</th><th class="num">Horas/mês</th><th class="num">Honorário</th><th>Status</th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+            :'<div class="empty">Nenhum cliente cadastrado ainda.</div>')+
+        '</div>'+
+        '<div class="panel">'+
+          '<h2>Custo-hora por função</h2><p class="hint">Base do Custo Direto de cada cliente — depende de quem está alocado em cada função na aba Equipe.</p>'+
+          '<div class="table-wrap"><table class="data"><thead><tr><th>Função</th><th class="num">Custo/hora</th></tr></thead><tbody>'+funcRows+'</tbody></table></div>'+
+        '</div>'+
+      '</div>'
+    );
+  }
+
+  // ===================================================================
+  // Custos Fixos
+  // ===================================================================
+  function renderCustos(){
+    var s=state;
+    var rows=s.custosFixos.map(function(r){
+      return '<tr>'+
+        '<td><input type="text" value="'+esc(r.item)+'" onchange="App.updateCustoFixo('+r.id+',\'item\',this.value)"></td>'+
+        '<td class="num col-med"><input type="number" step="0.01" value="'+r.valor+'" onchange="App.updateCustoFixo('+r.id+',\'valor\',this.value)"></td>'+
+        '<td><button class="btn ghost-danger" onclick="App.removeCustoFixo('+r.id+')">Remover</button></td>'+
+      '</tr>';
+    }).join("");
+    return (
+      '<div class="pagehead"><div><h1>Custos Fixos</h1><p>Despesas mensais do escritório, rateadas entre clientes proporcionalmente às horas técnicas de cada um.</p></div>'+
+        '<button class="btn primary" onclick="App.addCustoFixo()">+ Adicionar item</button></div>'+
+      '<div class="panel"><div class="table-wrap"><table class="data"><thead><tr><th>Item</th><th class="num">Valor mensal</th><th></th></tr></thead><tbody>'+rows+
+      '</tbody><tfoot><tr><td>Total custos fixos</td><td class="num">'+brl(totalFixos(s))+'</td><td></td></tr></tfoot></table></div></div>'
+    );
+  }
+
+  // ===================================================================
+  // Equipe
+  // ===================================================================
+  function renderEquipe(){
+    var s=state;
+    var rows=s.equipe.map(function(r){
+      var custoTotal=r.salario*(1+r.encargoPct);
+      var ch=r.horas>0?custoTotal/r.horas:0;
+      return '<tr>'+
+        '<td><input type="text" value="'+esc(r.nome)+'" onchange="App.updateEquipe('+r.id+',\'nome\',this.value)"></td>'+
+        '<td><input type="text" value="'+esc(r.cargo)+'" onchange="App.updateEquipe('+r.id+',\'cargo\',this.value)"></td>'+
+        '<td style="min-width:150px">'+selectHTML(FUNCOES,r.funcao,"App.updateEquipe("+r.id+",'funcao',this.value)")+'</td>'+
+        '<td class="num col-med"><input type="number" step="0.01" value="'+r.salario+'" onchange="App.updateEquipe('+r.id+',\'salario\',this.value)"></td>'+
+        '<td class="num col-narrow"><div class="suffix-wrap"><input type="number" step="0.1" value="'+(r.encargoPct*100).toFixed(1)+'" onchange="App.updateEquipe('+r.id+',\'encargoPct\',this.value)"><span class="suffix">%</span></div></td>'+
+        '<td class="num col-narrow"><input type="number" step="1" value="'+r.horas+'" onchange="App.updateEquipe('+r.id+',\'horas\',this.value)"></td>'+
+        '<td class="num">'+brl(custoTotal)+'</td>'+
+        '<td class="num">'+brl(ch)+'</td>'+
+        '<td><button class="btn ghost-danger" onclick="App.removeEquipe('+r.id+')">Remover</button></td>'+
+      '</tr>';
+    }).join("");
+    return (
+      '<div class="pagehead"><div><h1>Equipe e Custo-Hora</h1><p>Cada colaborador tem uma função — o Custo Direto de cada cliente usa o custo-hora médio da função correspondente, não uma média única do escritório.</p></div>'+
+        '<button class="btn primary" onclick="App.addEquipe()">+ Adicionar colaborador</button></div>'+
+      '<div class="panel"><div class="table-wrap"><table class="data"><thead><tr><th>Colaborador</th><th>Cargo</th><th>Função</th><th class="num">Salário bruto</th><th class="num">Encargos</th><th class="num">Horas/mês</th><th class="num">Custo total/mês</th><th class="num">Custo/hora</th><th></th></tr></thead><tbody>'+rows+
+      '</tbody><tfoot><tr><td colspan="3">Total / custo-hora geral</td><td class="num">—</td><td class="num">—</td><td class="num">'+num(totalHorasEquipe(s))+'</td><td class="num">'+brl(totalPessoal(s))+'</td><td class="num">'+brl(custoHoraGeral(s))+'</td><td></td></tr></tfoot></table></div>'+
+      '<p class="hint" style="margin:10px 2px 0">Encargos: INSS patronal, FGTS, 13º, férias + 1/3 e provisão de rescisão (use percentual menor para pró-labore de sócios).</p></div>'
+    );
+  }
+
+  // ===================================================================
+  // Parâmetros
+  // ===================================================================
+  function renderParametros(){
+    var p=state.parametros;
+    return (
+      '<div class="pagehead"><div><h1>Parâmetros de Precificação</h1><p>Margens, fator de risco tributário, piso de honorários, franquias e impostos do próprio escritório.</p></div></div>'+
+      '<div class="grid2">'+
+        '<div class="panel"><h2>Margem e Fator de Risco</h2><p class="hint">Preço = (Custo Direto + Custo Indireto) × (1 + Margem) × Fator de Risco.</p>'+
+          '<div class="field"><label>Margem de lucro desejada</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+(p.margem*100).toFixed(1)+'" onchange="App.updateParametro(\'margem\',this.value)"><span class="suffix">%</span></div></div>'+
+          '<div class="field"><label>Margem mínima aceitável (alerta)</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+(p.margemMinima*100).toFixed(1)+'" onchange="App.updateParametro(\'margemMinima\',this.value)"><span class="suffix">%</span></div></div>'+
+          '<div class="field"><label>Fator de risco — Lucro Presumido</label><div class="suffix-wrap"><input type="number" step="0.05" value="'+p.fatorRiscoPresumido.toFixed(2)+'" onchange="App.updateParametro(\'fatorRiscoPresumido\',this.value)"><span class="suffix">×</span></div><span class="desc">Faixa de mercado: 1,3 a 1,5</span></div>'+
+          '<div class="field"><label>Fator de risco — Lucro Real</label><div class="suffix-wrap"><input type="number" step="0.05" value="'+p.fatorRiscoReal.toFixed(2)+'" onchange="App.updateParametro(\'fatorRiscoReal\',this.value)"><span class="suffix">×</span></div><span class="desc">Faixa de mercado: 1,8 a 2,5 (PIS/COFINS não cumulativo, LALUR/LACS, ECF, DCTFWeb)</span></div>'+
+        '</div>'+
+        '<div class="panel"><h2>Impostos do escritório e piso</h2><p class="hint">Aplicados sobre a receita do próprio escritório e como trava mínima de honorário.</p>'+
+          '<div class="field"><label>Alíquota efetiva do escritório</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+(p.aliquotaEscritorio*100).toFixed(1)+'" onchange="App.updateParametro(\'aliquotaEscritorio\',this.value)"><span class="suffix">%</span></div><span class="desc">Simples Nacional Anexo III/V do próprio escritório — o honorário é reajustado para cobrir esse imposto.</span></div>'+
+          '<div class="field"><label>Piso de mercado (R$)</label><div class="suffix-wrap"><input type="number" step="10" value="'+p.pisoMercado+'" onchange="App.updateParametro(\'pisoMercado\',this.value)"><span class="suffix">R$</span></div></div>'+
+          '<div class="field"><label>Múltiplo de horas do sênior para o piso</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+p.multiplicadorPiso+'" onchange="App.updateParametro(\'multiplicadorPiso\',this.value)"><span class="suffix">h</span></div><span class="desc">Piso final = maior entre o piso de mercado e este múltiplo × custo-hora do sênior. Evita vender abaixo do custo (dumping).</span></div>'+
+        '</div>'+
+        '<div class="panel"><h2>Franquias e excedentes</h2><p class="hint">Volume incluso no honorário fixo — acima disso, cobrança automática por unidade excedente.</p>'+
+          '<div class="grid2">'+
+            '<div class="field"><label>Franquia de documentos fiscais/mês</label><input type="number" step="5" value="'+p.franquiaDocumentos+'" onchange="App.updateParametro(\'franquiaDocumentos\',this.value)"></div>'+
+            '<div class="field"><label>Valor por documento excedente</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+p.valorDocExcedente+'" onchange="App.updateParametro(\'valorDocExcedente\',this.value)"><span class="suffix">R$</span></div></div>'+
+            '<div class="field"><label>Franquia de lançamentos bancários/mês</label><input type="number" step="5" value="'+p.franquiaLancamentos+'" onchange="App.updateParametro(\'franquiaLancamentos\',this.value)"></div>'+
+            '<div class="field"><label>Valor por lançamento excedente</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+p.valorLancamentoExcedente+'" onchange="App.updateParametro(\'valorLancamentoExcedente\',this.value)"><span class="suffix">R$</span></div></div>'+
+          '</div>'+
+        '</div>'+
+        '<div class="panel"><h2>Sazonalidade — fechamento anual</h2><p class="hint">Sinalizado automaticamente para Lucro Real e indústrias em Presumido/Real (ECD, ECF, balanço anual).</p>'+
+          '<div class="field"><label>Taxa de fechamento anual</label><div class="suffix-wrap"><input type="number" step="50" value="'+p.taxaFechamentoAnual+'" onchange="App.updateParametro(\'taxaFechamentoAnual\',this.value)"><span class="suffix">R$</span></div><span class="desc">Cobrança anual à parte, informada na proposta — não entra na mensalidade.</span></div>'+
+        '</div>'+
+        '<div class="panel"><h2>Proteção de margem</h2><p class="hint">Reserva embutida no honorário para cobrir risco de calote — sem isso, cada cliente inadimplente vira prejuízo direto.</p>'+
+          '<div class="field"><label>Provisão para inadimplência</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+(p.taxaInadimplencia*100).toFixed(1)+'" onchange="App.updateParametro(\'taxaInadimplencia\',this.value)"><span class="suffix">%</span></div><span class="desc">Somada à alíquota do escritório no reajuste do honorário (gross-up).</span></div>'+
+          '<label class="check-row" style="margin-top:4px"><input type="checkbox" '+(p.honorarioDecimoQuarto?"checked":"")+' onchange="App.updateParametroBool(\'honorarioDecimoQuarto\',this.checked)">Cobrar 14º honorário (mês de dezembro em dobro)</label>'+
+        '</div>'+
+        '<div class="panel"><h2>Condições comerciais</h2><p class="hint">Entram automaticamente no texto de toda proposta gerada — evita ambiguidade sobre vencimento, multa e reajuste.</p>'+
+          '<div class="grid2">'+
+            '<div class="field"><label>Dia de vencimento</label><input type="number" step="1" min="1" max="28" value="'+p.diaVencimento+'" onchange="App.updateParametro(\'diaVencimento\',this.value)"></div>'+
+            '<div class="field"><label>Índice de reajuste anual</label><input type="text" value="'+esc(p.indiceReajuste)+'" onchange="App.updateParametro(\'indiceReajuste\',this.value)"></div>'+
+            '<div class="field"><label>Multa por atraso</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+(p.multaAtraso*100).toFixed(1)+'" onchange="App.updateParametro(\'multaAtraso\',this.value)"><span class="suffix">%</span></div></div>'+
+            '<div class="field"><label>Juros de mora</label><div class="suffix-wrap"><input type="number" step="0.5" value="'+(p.jurosMoraMes*100).toFixed(1)+'" onchange="App.updateParametro(\'jurosMoraMes\',this.value)"><span class="suffix">%/mês</span></div></div>'+
+            '<div class="field"><label>Aviso prévio para rescisão</label><div class="suffix-wrap"><input type="number" step="5" value="'+p.avisoPrevioDias+'" onchange="App.updateParametro(\'avisoPrevioDias\',this.value)"><span class="suffix">dias</span></div></div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'
+    );
+  }
+
+  // ===================================================================
+  // Motor de Cálculo (Parâmetros de Tempo e Esforço)
+  // ===================================================================
+  function renderMotor(){
+    var m=state.motor;
+    function baseRow(mapName,key,label){
+      return '<tr><td>'+esc(label)+'</td><td class="num col-narrow"><input type="number" step="0.1" value="'+(m[mapName][key]||0)+'" onchange="App.updateMotorMap(\''+mapName+'\',\''+key+'\',this.value)"></td></tr>';
+    }
+    var baseFiscalRows = REGIMES.map(function(r){return baseRow("baseFiscal",r.key,r.label);}).join("");
+    var baseContabilRows = REGIMES.map(function(r){return baseRow("baseContabil",r.key,r.label);}).join("");
+    var detalheKeys=[["anexo1","Anexo I — Comércio"],["anexo2","Anexo II — Indústria"],["anexo3","Anexo III — Serviços"],["anexo4","Anexo IV — Serviços (INSS)"],["anexo5","Anexo V — Serviços intelectuais"],
+      ["comercio","Comércio (Presumido/Real)"],["industria","Indústria (Presumido/Real)"],["servicos","Serviços (Presumido/Real)"],["holding","Holding"],["misto","Misto"]];
+    var detalheRows = detalheKeys.map(function(k){return baseRow("detalheAjusteFiscal",k[0],k[1]);}).join("");
+    var riscoRows = RISCOS.map(function(r){return baseRow("riscoHoras",r.key,r.label);}).join("");
+    var estoqueRows = ESTOQUES.map(function(r){return baseRow("estoqueHoras",r.key,r.label);}).join("");
+    return (
+      '<div class="pagehead"><div><h1>Motor de Cálculo</h1><p>Toda hora usada na precificação vem daqui — nenhum valor de honorário é "chute". Ajuste livremente conforme a realidade do seu escritório; as fórmulas se atualizam sozinhas.</p></div></div>'+
+      '<div class="panel">'+
+        '<div class="tabgroup"><h3>Horas-base de apuração por regime</h3><p class="hint">Independente de volume — tempo mínimo de apuração/escrituração mensal.</p>'+
+          '<div class="grid2">'+
+            '<div><div class="section-title">Fiscal</div><table class="data"><tbody>'+baseFiscalRows+'</tbody></table></div>'+
+            '<div><div class="section-title">Contábil</div><table class="data"><tbody>'+baseContabilRows+'</tbody></table></div>'+
+          '</div>'+
+          '<div class="field" style="max-width:320px; margin-top:12px"><label>DP — hora fixa se houver folha/pró-labore</label><input type="number" step="0.1" value="'+m.baseDPFixo+'" onchange="App.updateMotor(\'baseDPFixo\',this.value)"></div>'+
+        '</div>'+
+        '<div class="tabgroup"><h3>Ajuste fiscal por Anexo/Segmento</h3><p class="hint">Somado às horas fiscais base, conforme o detalhe do regime do cliente.</p>'+
+          '<div class="table-wrap"><table class="data"><thead><tr><th>Anexo/Segmento</th><th class="num">Horas extra</th></tr></thead><tbody>'+detalheRows+'</tbody></table></div>'+
+        '</div>'+
+        '<div class="tabgroup"><h3>Taxas por volume operacional</h3><p class="hint">Horas por unidade — multiplicadas pela quantidade informada de cada cliente.</p>'+
+          '<div class="table-wrap"><table class="data"><tbody>'+
+            '<tr><td>Hora por documento de saída (NFe/NFSe/NFCe)</td><td class="num col-narrow"><input type="number" step="0.01" value="'+m.taxaHoraDocSaida+'" onchange="App.updateMotor(\'taxaHoraDocSaida\',this.value)"></td></tr>'+
+            '<tr><td>Hora por documento de entrada (compras/despesas)</td><td class="num col-narrow"><input type="number" step="0.01" value="'+m.taxaHoraDocEntrada+'" onchange="App.updateMotor(\'taxaHoraDocEntrada\',this.value)"></td></tr>'+
+            '<tr><td>Hora por lançamento bancário (conciliação)</td><td class="num col-narrow"><input type="number" step="0.01" value="'+m.taxaHoraLancamento+'" onchange="App.updateMotor(\'taxaHoraLancamento\',this.value)"></td></tr>'+
+            '<tr><td>Hora por colaborador CLT (folha)</td><td class="num col-narrow"><input type="number" step="0.1" value="'+m.taxaHoraColaborador+'" onchange="App.updateMotor(\'taxaHoraColaborador\',this.value)"></td></tr>'+
+            '<tr><td>Hora por sócio com pró-labore</td><td class="num col-narrow"><input type="number" step="0.1" value="'+m.taxaHoraProlabore+'" onchange="App.updateMotor(\'taxaHoraProlabore\',this.value)"></td></tr>'+
+            '<tr><td>Hora por terceirizado/sócio administrador</td><td class="num col-narrow"><input type="number" step="0.1" value="'+m.taxaHoraTerceirizado+'" onchange="App.updateMotor(\'taxaHoraTerceirizado\',this.value)"></td></tr>'+
+            '<tr><td>Hora por nota fiscal emitida pela contabilidade</td><td class="num col-narrow"><input type="number" step="0.01" value="'+m.taxaHoraNotaEmitida+'" onchange="App.updateMotor(\'taxaHoraNotaEmitida\',this.value)"></td></tr>'+
+            '<tr><td>Horas por declaração de IRPF (anual, amortizado/mês)</td><td class="num col-narrow"><input type="number" step="0.5" value="'+m.taxaHoraIRPF+'" onchange="App.updateMotor(\'taxaHoraIRPF\',this.value)"></td></tr>'+
+            '<tr><td>Horas de reunião executiva mensal</td><td class="num col-narrow"><input type="number" step="0.5" value="'+m.taxaHoraAtendimento+'" onchange="App.updateMotor(\'taxaHoraAtendimento\',this.value)"></td></tr>'+
+            '<tr><td>BPO — horas-base fixas</td><td class="num col-narrow"><input type="number" step="0.5" value="'+m.baseBPO+'" onchange="App.updateMotor(\'baseBPO\',this.value)"></td></tr>'+
+            '<tr><td>BPO — hora por lançamento processado</td><td class="num col-narrow"><input type="number" step="0.01" value="'+m.taxaHoraBPO+'" onchange="App.updateMotor(\'taxaHoraBPO\',this.value)"></td></tr>'+
+            '<tr><td>Horas por CNPJ adicional (grupo econômico/filial)</td><td class="num col-narrow"><input type="number" step="0.5" value="'+m.taxaHoraCnpjAdicional+'" onchange="App.updateMotor(\'taxaHoraCnpjAdicional\',this.value)"></td></tr>'+
+          '</tbody></table></div>'+
+        '</div>'+
+        '<div class="grid2">'+
+          '<div class="tabgroup"><h3>Atividades de alto risco/fiscalização</h3><p class="hint">Horas extras somadas quando marcadas no cliente.</p>'+
+            '<div class="table-wrap"><table class="data"><thead><tr><th>Atividade</th><th class="num">Horas extra</th></tr></thead><tbody>'+riscoRows+'</tbody></table></div>'+
+          '</div>'+
+          '<div class="tabgroup"><h3>Escrituração de estoque</h3><p class="hint">Horas extras conforme o tipo de controle de inventário.</p>'+
+            '<div class="table-wrap"><table class="data"><thead><tr><th>Tipo</th><th class="num">Horas extra</th></tr></thead><tbody>'+estoqueRows+'</tbody></table></div>'+
+          '</div>'+
+        '</div>'+
+      '</div>'
+    );
+  }
+
+  // ===================================================================
+  // Serviços Avulsos (price list)
+  // ===================================================================
+  function renderAvulsos(){
+    var rows = state.avulsos.map(function(r){
+      return '<tr>'+
+        '<td style="min-width:220px"><input type="text" value="'+esc(r.nome)+'" onchange="App.updateAvulso('+r.id+',\'nome\',this.value)"></td>'+
+        '<td class="num col-med"><input type="number" step="10" value="'+r.valor+'" onchange="App.updateAvulso('+r.id+',\'valor\',this.value)"></td>'+
+        '<td style="min-width:140px"><input type="text" value="'+esc(r.unidade)+'" onchange="App.updateAvulso('+r.id+',\'unidade\',this.value)"></td>'+
+        '<td style="min-width:220px"><input type="text" value="'+esc(r.obs)+'" onchange="App.updateAvulso('+r.id+',\'obs\',this.value)"></td>'+
+        '<td><button class="btn ghost-danger" onclick="App.removeAvulso('+r.id+')">Remover</button></td>'+
+      '</tr>';
+    }).join("");
+    return (
+      '<div class="pagehead"><div><h1>Serviços Avulsos</h1><p>Serviços pontuais que não fazem parte do honorário mensal recorrente — cobrar por fora é o que mais se perde no dia a dia de um escritório. Esta tabela entra automaticamente ao final de toda proposta gerada.</p></div>'+
+        '<button class="btn primary" onclick="App.addAvulso()">+ Adicionar serviço</button></div>'+
+      '<div class="panel">'+
+        (state.avulsos.length?
+        '<div class="table-wrap"><table class="data"><thead><tr><th>Serviço</th><th class="num">Valor</th><th>Unidade</th><th>Observação</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'
+        :'<div class="empty">Nenhum serviço avulso cadastrado.</div>')+
+        '<p class="hint" style="margin-top:12px">Valor 0 = "sob orçamento" ou "% de êxito" (indicado na unidade). Ajuste os valores para a realidade da sua região e porte de escritório.</p>'+
+      '</div>'
+    );
+  }
+
+  // ===================================================================
+  // Clientes (master-detail)
+  // ===================================================================
+  function renderClientes(){
+    var s=state;
+    if(!s.ui.clienteId && s.clientes.length) s.ui.clienteId = s.clientes[0].id;
+    var list = s.clientes.map(function(c){
+      var ht=honorarioTotal(c,s);
+      return '<div class="client-card'+(c.id===s.ui.clienteId?" active":"")+'" onclick="App.selectCliente('+c.id+')">'+
+        '<div class="cname">'+esc(c.nome)+'</div>'+
+        '<div class="cmeta"><span>'+esc(labelOf(REGIMES,c.regime))+'</span>'+(pisoAplicado(c,s)?'<span class="pill brass">Piso</span>':'')+'</div>'+
+        '<div class="cprice">'+brl(ht)+'/mês</div>'+
+      '</div>';
+    }).join("");
+
+    var detail = "";
+    var c = s.clientes.find(function(x){return x.id===s.ui.clienteId;});
+    if(c){
+      var opts = DETALHES[c.regime]||[];
+      var b = breakdown(c,s);
+      var total = b.total>0?b.total:1;
+      var segs = [
+        {k:"custosEquipe", label:"Folha/equipe alocada", color:"var(--accent)"},
+        {k:"custosOperacionais", label:"Custos operacionais (rateio)", color:"var(--brass)"},
+        {k:"impostos", label:"Impostos do escritório", color:"var(--danger)"},
+        {k:"inadimplencia", label:"Provisão para inadimplência", color:"var(--ink-muted)"},
+        {k:"margem", label:"Margem de lucro (inclui prêmio de risco)", color:"var(--success)"}
+      ];
+      var barHTML = segs.map(function(seg){
+        var w=(b[seg.k]/total*100);
+        return '<div style="width:'+w.toFixed(2)+'%; background:'+seg.color+'"></div>';
+      }).join("");
+      var legendHTML = segs.map(function(seg){
+        return '<div class="lg"><span class="swatch" style="background:'+seg.color+'"></span>'+esc(seg.label)+': '+brl(b[seg.k])+' ('+pct(b[seg.k]/total,0)+')</div>';
+      }).join("");
+      var riscoChecks = RISCOS.map(function(r){
+        var checked=(c.riscos||[]).indexOf(r.key)>=0;
+        return '<label class="check-row"><input type="checkbox" '+(checked?"checked":"")+' onchange="App.toggleRisco('+c.id+',\''+r.key+'\',this.checked)">'+esc(r.label)+'<span class="h">+'+num(state.motor.riscoHoras[r.key])+'h</span></label>';
+      }).join("");
+      var estoqueRadios = ESTOQUES.map(function(e){
+        return '<label class="radio-opt"><input type="radio" name="estoque'+c.id+'" '+(c.estoque===e.key?"checked":"")+' onchange="App.updateCliente('+c.id+',\'estoque\',\''+e.key+'\')">'+esc(e.label)+'</label>';
+      }).join("");
+      var docs = (c.qtdDocSaida||0)+(c.qtdDocEntrada||0);
+      var sazon = temSazonalidade(c);
+
+      detail =
+        '<div class="panel">'+
+          '<div class="panel-head"><h2>'+esc(c.nome)+'</h2><button class="btn ghost-danger" onclick="App.removeCliente('+c.id+')">Remover cliente</button></div>'+
+          (pisoAplicado(c,s)?'<div class="alert brass"><span>⚑</span><div><b>Piso de honorários aplicado.</b> O cálculo técnico ('+brl(precoComImpostos(c,s))+') ficou abaixo do piso de '+brl(pisoAbsoluto(s))+' — o honorário foi ajustado para o piso.</div></div>':"")+
+          (sazon?'<div class="alert brass"><span>◐</span><div><b>Fechamento anual:</b> esforço redobrado previsto (balanço, ECD/ECF). Taxa de fechamento anual de '+brl(s.parametros.taxaFechamentoAnual)+' cobrada à parte — veja na aba Proposta.</div></div>':"")+
+          (excedentesTotal(c,s)>0?'<div class="alert danger"><span>▲</span><div><b>Franquia excedida:</b> volume atual gera '+brl(excedentesTotal(c,s))+' em excedentes neste mês (documentos e/ou lançamentos acima da franquia).</div></div>':"")+
+
+          '<div class="section-title">Identificação</div>'+
+          '<div class="field"><label>Nome do cliente</label><input type="text" value="'+esc(c.nome)+'" onchange="App.updateCliente('+c.id+',\'nome\',this.value)"></div>'+
+
+          '<div class="section-title">Regime tributário e estrutura societária</div>'+
+          '<div class="grid3">'+
+            '<div class="field"><label>Regime</label>'+selectHTML(REGIMES,c.regime,"App.updateCliente("+c.id+",'regime',this.value)")+'</div>'+
+            (opts.length?'<div class="field"><label>Anexo/Segmento</label>'+selectHTML(opts,c.regimeDetalhe,"App.updateCliente("+c.id+",'regimeDetalhe',this.value)")+'</div>':'<div class="field"><label>Anexo/Segmento</label><input type="text" value="Não aplicável (MEI)" disabled></div>')+
+            '<div class="field"><label>CNPJs adicionais (grupo/filiais)</label><input type="number" step="1" min="0" value="'+(c.numCnpjsAdicionais||0)+'" onchange="App.updateCliente('+c.id+',\'numCnpjsAdicionais\',this.value)"></div>'+
+          '</div>'+
+
+          '<div class="section-title">Volume operacional (mensal)</div>'+
+          '<div class="grid3">'+
+            '<div class="field"><label>Documentos de saída (NFe/NFSe/NFCe)</label><input type="number" step="1" value="'+c.qtdDocSaida+'" onchange="App.updateCliente('+c.id+',\'qtdDocSaida\',this.value)"></div>'+
+            '<div class="field"><label>Documentos de entrada (compras/despesas)</label><input type="number" step="1" value="'+c.qtdDocEntrada+'" onchange="App.updateCliente('+c.id+',\'qtdDocEntrada\',this.value)"></div>'+
+            '<div class="field"><label>Lançamentos bancários (conciliação)</label><input type="number" step="1" value="'+c.qtdLancamentosBancarios+'" onchange="App.updateCliente('+c.id+',\'qtdLancamentosBancarios\',this.value)"></div>'+
+          '</div>'+
+          '<p class="hint">Franquia inclusa: '+s.parametros.franquiaDocumentos+' documentos e '+s.parametros.franquiaLancamentos+' lançamentos/mês. Total de documentos informado: '+num(docs,0)+'.</p>'+
+
+          '<div class="section-title">Departamento pessoal</div>'+
+          '<div class="grid3">'+
+            '<div class="field"><label>Colaboradores CLT ativos</label><input type="number" step="1" value="'+c.numColaboradores+'" onchange="App.updateCliente('+c.id+',\'numColaboradores\',this.value)"></div>'+
+            '<div class="field"><label>Sócios com pró-labore</label><input type="number" step="1" value="'+c.numSociosProlabore+'" onchange="App.updateCliente('+c.id+',\'numSociosProlabore\',this.value)"></div>'+
+            '<div class="field"><label>Terceirizados / sócios administradores</label><input type="number" step="1" value="'+c.numTerceirizados+'" onchange="App.updateCliente('+c.id+',\'numTerceirizados\',this.value)"></div>'+
+          '</div>'+
+
+          '<div class="section-title">Complexidade e segmento</div>'+
+          '<p class="hint" style="margin-top:-4px">Atividades de alto risco / fiscalização rigorosa:</p>'+
+          '<div class="check-grid">'+riscoChecks+'</div>'+
+          '<p class="hint" style="margin-top:10px">Escrituração de estoque:</p>'+
+          '<div class="radio-row">'+estoqueRadios+'</div>'+
+
+          '<div class="section-title">Serviços adicionais</div>'+
+          '<div class="check-grid">'+
+            '<label class="check-row"><input type="checkbox" '+(c.servicos.bpo?"checked":"")+' onchange="App.updateServico('+c.id+',\'bpo\',this.checked)">BPO Financeiro (contas a pagar/receber)</label>'+
+            '<label class="check-row"><input type="checkbox" '+(c.servicos.atendimentoPresencial?"checked":"")+' onchange="App.updateServico('+c.id+',\'atendimentoPresencial\',this.checked)">Atendimento presencial / reunião mensal</label>'+
+            '<label class="check-row"><input type="checkbox" '+(c.servicos.irpf?"checked":"")+' onchange="App.updateServico('+c.id+',\'irpf\',this.checked)">IRPF dos sócios incluído</label>'+
+            '<label class="check-row"><input type="checkbox" '+(c.servicos.emissaoNF?"checked":"")+' onchange="App.updateServico('+c.id+',\'emissaoNF\',this.checked)">Emissão de notas fiscais pela contabilidade</label>'+
+          '</div>'+
+          (c.servicos.irpf?'<div class="field" style="max-width:220px; margin-top:8px"><label>Nº de declarações de IRPF/ano</label><input type="number" step="1" value="'+(c.servicos.qtdDeclaracoes||0)+'" onchange="App.updateServico('+c.id+',\'qtdDeclaracoes\',this.value)"></div>':"")+
+          (c.servicos.emissaoNF?'<div class="field" style="max-width:220px; margin-top:8px"><label>Nº de notas emitidas/mês</label><input type="number" step="1" value="'+(c.servicos.qtdNotas||0)+'" onchange="App.updateServico('+c.id+',\'qtdNotas\',this.value)"></div>':"")+
+
+          '<div class="section-title">Observações</div>'+
+          '<div class="field"><textarea rows="2" onchange="App.updateCliente('+c.id+',\'obs\',this.value)">'+esc(c.obs)+'</textarea></div>'+
+        '</div>'+
+
+        '<div class="panel">'+
+          '<h2>Resumo de precificação</h2>'+
+          '<div class="kpi-grid" style="margin-top:12px">'+
+            '<div class="kpi"><div class="label">Horas técnicas/mês</div><div class="value">'+num(horasTotaisCliente(c,s))+'</div></div>'+
+            '<div class="kpi"><div class="label">Fator de risco</div><div class="value">'+fatorRisco(c,s).toFixed(2)+'×</div></div>'+
+            '<div class="kpi"><div class="label">Honorário base</div><div class="value">'+brl(b.total)+'</div></div>'+
+            '<div class="kpi"><div class="label">Honorário total (c/ excedentes)</div><div class="value">'+brl(honorarioTotal(c,s))+'</div></div>'+
+          '</div>'+
+          '<p class="hint">Composição do honorário base:</p>'+
+          '<div class="breakdown-bar">'+barHTML+'</div>'+
+          '<div class="breakdown-legend">'+legendHTML+'</div>'+
+          '<div style="margin-top:16px"><button class="btn primary" onclick="App.setSimCliente('+c.id+'); App.setTab(\'simulador\')">Gerar proposta comercial →</button></div>'+
+        '</div>';
+    }
+
+    return (
+      '<div class="pagehead"><div><h1>Precificação de Clientes</h1><p>Selecione um cliente para editar o cadastro completo, ou adicione um novo.</p></div>'+
+        '<button class="btn primary" onclick="App.addCliente()">+ Novo cliente</button></div>'+
+      '<div class="master-detail">'+
+        '<div class="client-list">'+(list||'<div class="empty">Nenhum cliente cadastrado.</div>')+'</div>'+
+        '<div>'+(detail||'<div class="panel"><div class="empty">Selecione um cliente à esquerda.</div></div>')+'</div>'+
+      '</div>'
+    );
+  }
+
+  // ===================================================================
+  // Simulador (Proposta)
+  // ===================================================================
+  function renderSimulador(){
+    var s=state;
+    if(!s.clientes.length) return '<div class="pagehead"><div><h1>Proposta Comercial</h1><p>Cadastre um cliente na aba Clientes para gerar uma proposta.</p></div></div>';
+    if(!s.ui.simId || !s.clientes.some(function(c){return c.id===s.ui.simId;})) s.ui.simId=s.clientes[0].id;
+    var c=s.clientes.find(function(x){return x.id===s.ui.simId;});
+    var b=breakdown(c,s);
+    var options=s.clientes.map(function(cl){return '<option value="'+cl.id+'"'+(cl.id===c.id?" selected":"")+'>'+esc(cl.nome)+'</option>';}).join("");
+    var servicos=["Contábil e fiscal (incluso)"];
+    if(c.servicos.bpo) servicos.push("BPO Financeiro");
+    if((c.numColaboradores||0)>0||(c.numSociosProlabore||0)>0) servicos.push("Departamento Pessoal");
+    if(c.servicos.irpf) servicos.push("IRPF dos sócios");
+    if(c.servicos.emissaoNF) servicos.push("Emissão de NF");
+    if(c.servicos.atendimentoPresencial) servicos.push("Atendimento executivo mensal");
+
+    return (
+      '<div class="pagehead"><div><h1>Proposta Comercial</h1><p>Resumo pronto para apresentar ou enviar ao cliente.</p></div></div>'+
+      '<div class="panel" style="max-width:680px"><div class="field" style="max-width:340px"><label>Cliente</label><select onchange="App.setSimCliente(parseInt(this.value))">'+options+'</select></div></div>'+
+      '<div class="proposal">'+
+        '<div class="proposal-card">'+
+          '<div class="letterhead"><h2>'+esc(c.nome)+'</h2><span class="tag">Proposta</span></div>'+
+          '<div class="proposal-row"><span class="k">Regime tributário</span><span class="v">'+esc(labelOf(REGIMES,c.regime))+(c.regimeDetalhe?" / "+esc(labelOf(DETALHES[c.regime]||[],c.regimeDetalhe)):"")+'</span></div>'+
+          '<div class="proposal-row"><span class="k">Serviços contratados</span><span class="v" style="font-family:var(--font-body); text-align:right">'+esc(servicos.join(", "))+'</span></div>'+
+          '<div class="proposal-row"><span class="k">Horas técnicas estimadas/mês</span><span class="v">'+num(horasTotaisCliente(c,s))+' h</span></div>'+
+          '<div class="proposal-row"><span class="k">Fator de risco tributário</span><span class="v">'+fatorRisco(c,s).toFixed(2)+'×</span></div>'+
+          '<div class="proposal-row"><span class="k">Custo direto (equipe)</span><span class="v">'+brl(b.custosEquipe)+'</span></div>'+
+          '<div class="proposal-row"><span class="k">Custo operacional (rateio)</span><span class="v">'+brl(b.custosOperacionais)+'</span></div>'+
+          '<div class="proposal-row"><span class="k">Impostos do escritório</span><span class="v">'+brl(b.impostos)+'</span></div>'+
+          '<div class="proposal-row"><span class="k">Provisão para inadimplência</span><span class="v">'+brl(b.inadimplencia)+'</span></div>'+
+          '<div class="proposal-row"><span class="k">Margem de lucro</span><span class="v">'+brl(b.margem)+'</span></div>'+
+          (excedentesTotal(c,s)>0?'<div class="proposal-row"><span class="k">Excedentes previstos (volume atual)</span><span class="v">'+brl(excedentesTotal(c,s))+'</span></div>':"")+
+          (pisoAplicado(c,s)?'<div class="proposal-row"><span class="k">Piso de honorários aplicado</span><span class="v">sim</span></div>':"")+
+          '<div class="proposal-final"><span class="k">Honorário mensal sugerido</span><span class="v">'+brl(honorarioTotal(c,s))+'</span></div>'+
+          '<div class="proposal-text">'+esc(proposalText(c,s))+'</div>'+
+        '</div>'+
+        '<div class="proposal-actions">'+
+          '<button class="btn primary" onclick="window.print()">Imprimir / salvar PDF</button>'+
+          '<button class="btn" onclick="App.copyProposal('+c.id+')">Copiar texto da proposta</button>'+
+        '</div>'+
+      '</div>'
+    );
+  }
+
+  // ===================================================================
+  // App shell
+  // ===================================================================
+  var RENDERERS={painel:renderPainel, custos:renderCustos, equipe:renderEquipe, parametros:renderParametros, motor:renderMotor, avulsos:renderAvulsos, clientes:renderClientes, simulador:renderSimulador};
+  function renderApp(){
+    renderNav();
+    var fn=RENDERERS[state.ui.tab]||renderPainel;
+    document.getElementById("main").innerHTML=fn();
+    renderStatus();
+  }
+
+  window.App = {
+    setTab:setTab,
+    updateCustoFixo:updateCustoFixo, addCustoFixo:addCustoFixo, removeCustoFixo:removeCustoFixo,
+    updateEquipe:updateEquipe, addEquipe:addEquipe, removeEquipe:removeEquipe,
+    updateParametro:updateParametro, updateParametroBool:updateParametroBool, updateMotor:updateMotor, updateMotorMap:updateMotorMap,
+    updateCliente:updateCliente, toggleRisco:toggleRisco, updateServico:updateServico,
+    addCliente:addCliente, removeCliente:removeCliente, selectCliente:selectCliente,
+    setSimCliente:setSimCliente, copyProposal:copyProposal,
+    updateAvulso:updateAvulso, addAvulso:addAvulso, removeAvulso:removeAvulso,
+    exportBackup:exportBackup, importBackup:importBackup
+  };
+
+  renderApp();
+  initPersistence();
+})();
+</script>
+</body>
+</html>
